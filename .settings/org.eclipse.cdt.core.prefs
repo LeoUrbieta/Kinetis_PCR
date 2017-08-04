@@ -1,0 +1,6 @@
+eclipse.preferences.version=1
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.974405456/FSLESL_LOC/delimiter=;
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.974405456/FSLESL_LOC/operation=append
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.974405456/FSLESL_LOC/value=C\:\\Freescale\\FSLESL\\CM0_FSLESL_4.2_KDS
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.974405456/append=true
+environment/project/ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.974405456/appendContributed=true

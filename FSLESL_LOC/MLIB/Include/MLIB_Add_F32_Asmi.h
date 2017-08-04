@@ -1,0 +1,89 @@
+/*******************************************************************************
+*
+* Copyright 2007-2015 Freescale Semiconductor, Inc.
+*
+* This software is owned or controlled by Freescale Semiconductor.
+* Use of this software is governed by the Freescale License
+* distributed with this Material.
+* See the LICENSE file distributed for more details.
+* 
+*
+****************************************************************************//*!
+*
+* @brief  Addition
+* 
+*******************************************************************************/
+#ifndef _MLIB_ADD_F32_ASM_H_
+#define _MLIB_ADD_F32_ASM_H_
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
+/*******************************************************************************
+* Includes
+*******************************************************************************/
+#include "mlib_types.h"
+
+/*******************************************************************************
+* Macros 
+*******************************************************************************/  
+#define MLIB_AddSat_F32_Asmi(f32Add1, f32Add2) MLIB_AddSat_F32_FAsmi(f32Add1, f32Add2)
+
+/***************************************************************************//*!
+*  Saturated Addition 	   
+*  Output = f32Add1 + f32Add2
+*******************************************************************************/
+#if defined(__IAR_SYSTEMS_ICC__)           /* IAR compiler */
+#pragma diag_suppress=Pe549  /* Suppresses the Pe549 warning for IAR compiler*/
+#endif
+static inline frac32_t MLIB_AddSat_F32_FAsmi(register frac32_t f32Add1, register frac32_t f32Add2)
+{
+    register frac32_t f32AddVal, f32SatVal;
+
+    #if defined(__CC_ARM)                                  /* For ARM Compiler */
+        __asm volatile{ adds f32AddVal, f32Add1, f32Add2   /* f32AddVal = f32Add1 + f32Add2 */
+                        movs f32SatVal, f32Add1            /* f32SatVal = f32Add1 */
+                        eors f32SatVal, f32SatVal, f32Add2 /* f32SatVal = f32Add1 ^ f32Add2 */
+                        bmi  SatEnd                        /* If f32SatVal < 0, then goes to the end of function */
+                        eors f32Add1, f32Add1, f32AddVal   /* f32Add1 = f32Add1 ^ (f32Add1 + f32Add2) */
+                        bpl SatEnd                         /* If f32Add1 >= 0, then goes to the end of function */
+                        movs f32AddVal, #128               /* f32AddVal = 0x80 */
+                        lsls f32AddVal, f32AddVal, #24     /* f32AddVal = 0x80000000 */
+                        cmp f32Add2, #0                    /* Compares f32Add2 with 0 */
+                        blt SatEnd                         /* If f32Add1 < 0, then goes to the end of function */
+                        subs f32AddVal, f32AddVal, #1      /* f32AddVal = 0x7FFFFFFF */
+                    SatEnd:};
+    #else
+        __asm volatile(
+                        #if defined(__GNUC__)              /* For GCC compiler */
+                            ".syntax unified \n"           /* Using unified asm syntax */
+                        #endif
+                        "adds %0, %1, %2 \n"               /* f32AddVal = f32Add1 + f32Add2 */
+                        "movs %3, %1 \n"                   /* f32SatVal = f32Add1 */
+                        "eors %3, %3, %2 \n"               /* f32SatVal = f32Add1 ^ f32Add2 */
+                        "bmi .+16 \n"                      /* If f32SatVal < 0, then goes to the end of function */
+                        "eors %1, %1, %0 \n"               /* f32Add1 = f32Add1 ^ (f32Add1 + f32Add2) */
+                        "bpl .+12 \n"                      /* If f32Add1 >= 0, then goes to the end of function */
+                        "movs %0, #128 \n"                 /* f32AddVal = 0x80 */
+                        "lsls %0, %0, #24 \n"              /* f32AddVal = 0x80000000 */
+                        "cmp %2, #0 \n"                    /* Compares f32Add2 with 0 */
+                        "blt .+4 \n"                       /* If f32Add1 < 0, then goes to the end of function */
+                        "subs %0, %0, #1 \n"               /* f32AddVal = 0x7FFFFFFF */
+                        #if defined(__GNUC__)              /* For GCC compiler */
+                            ".syntax divided \n"
+                        #endif
+                        : "+l"(f32AddVal), "+l"(f32Add1), "+l"(f32Add2), "+l"(f32SatVal):);
+    #endif
+
+    return f32AddVal;
+}
+#if defined(__IAR_SYSTEMS_ICC__)           /* IAR compiler */
+#pragma diag_default=Pe549
+#endif
+
+#if defined(__cplusplus)
+}
+#endif
+
+#endif  /* _MLIB_ADD_F32_ASM_H_ */
